@@ -3,6 +3,7 @@
 """
 import scipy.io
 import os
+import argparse
 
 img_file_extension = '.png'
 mat_file_extension = '.mat'
