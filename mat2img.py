@@ -11,7 +11,7 @@ def read_mat(mat_filename, key='GTcls'):
         mat = scipy.io.loadmat(mat_filename, mat_dtype=True, squeeze_me=True, struct_as_record=False)
         return mat[key].Segmentation
 
-def convert_mat2img(image_list, mat_dir="cls", output_dir="cls_png"):
+def convert_mat2img(image_list, mat_dir="cls", output_dir="cls_png", prefix=""):
     """
         image_list should be a list of string of file name without extension.
         image_list = ["2008_0000002", ...]
@@ -44,7 +44,12 @@ def main(args):
     else:
         image_list = read_from_txt(args.image_list)
 
-    convert_mat2img(image_list, args.mat_dir, args.output_dir)
+    if args.add_prefix:
+        prefix = args,prefix
+    else:
+        prefix = ""
+
+    convert_mat2img(image_list, args.mat_dir, args.output_dir, prefix)
 
 if __name__ == '__main__':
         parser = argparse.ArgumentParser()
@@ -52,9 +57,11 @@ if __name__ == '__main__':
         parser.add_argument('--image_list', type=str, default='./dataset/train.txt', help='dir of the image list.')
         parser.add_argument('--mat_dir', type=str, default='./dataset/cls', help='mat dir.')
         parser.add_argument('--output_dir', type=str, default='./dataset/cls_png', help='output dir.')
+        parser.add_argument('--prefix', type=str, default='', help='add prefix')
                 
         # flags
         parser.add_argument('-here', action="store_true", default=False, help='read from current directory')
+        parser.add_argument('-add_prefix', action="store_true", default=False, help='read from current directory')
 
         args = parser.parse_args()
         
