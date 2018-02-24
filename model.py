@@ -1,4 +1,6 @@
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import math
 
 """
@@ -113,7 +115,6 @@ nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
 nn.ReLU(inplace=True),
 nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
 nn.ReLU(inplace=True),
-# this part must be a dilated convolution? is equal?
 nn.MaxPool2d(kernel_size=2, stride=2, # diff
 
 nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
@@ -122,67 +123,94 @@ nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
 nn.ReLU(inplace=True),
 nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
 nn.ReLU(inplace=True),
-# this part must be a dilated convolution? is equal?
 nn.MaxPool2d(kernel_size=2, stride=2), #diff
 """
 
 class POVGG16(nn.Module):
+    inplace_flag = False
     def __init__(self, input_channel=3, num_class=2, init_weights=True):
         super(POVGG16, self).__init__()
 
         self.input_channel = input_channel
         self.num_class = num_class
+        
+        self.nll_loss = nn.NLLLoss2d(size_average=True)
 
-        # I hate write in for loops, name must be "features" because in the pretrained data's dict is named "features"
+        # I hate writing in for-loops.
+        # Name must be "features" because in the pretrained data's dict is named "features"
         self.features = nn.Sequential(
             nn.Conv2d(self.input_channel, 64, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(64, 64, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.MaxPool2d(kernel_size=3, stride=2),
 
             nn.Conv2d(64, 128, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(128, 128, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.MaxPool2d(kernel_size=3, stride=2),
 
             nn.Conv2d(128, 256, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(256, 256, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(256, 256, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.MaxPool2d(kernel_size=3, stride=2),
 
             nn.Conv2d(256, 512, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=1), # this part must be a dilated convolution? is equal?
+            nn.ReLU(inplace=self.inplace_flag),
+            #nn.MaxPool2d(kernel_size=3, stride=1, padding=0, dilation=1), # this part must be a dilated convolution? is equal?
+            nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=2, dilation=2),
 
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=1), # this part must be a dilated convolution? is equal?
+            nn.ReLU(inplace=self.inplace_flag),
+            #nn.MaxPool2d(kernel_size=3, stride=1, padding=0, dilation=1), # this part must be a dilated convolution? is equal?
+            nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=2, dilation=2),
 
             nn.Conv2d(512, 1024, stride=1, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Dropout(inplace=True),
-            nn.Conv2d(1024, 1024, stride=1, kernel_size=1, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Dropout(inplace=True),
+            nn.ReLU(inplace=self.inplace_flag),
+            nn.Dropout(inplace=self.inplace_flag),
+            nn.Conv2d(1024, 1024, stride=1, kernel_size=3, padding=1),
+            nn.ReLU(inplace=self.inplace_flag),
+            nn.Dropout(inplace=self.inplace_flag),
             nn.Conv2d(1024,  self.num_class, stride=1, kernel_size=1, padding=1)
         )
+
+        if init_weights:
+            self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
         return x
+
+    def loss(self, inputs, targets):
+        return self.nll_loss(F.log_softmax(inputs), targets)
+
+    def inference(self, inputs):
+        return torch.max(torch.nn.functional.softmax(self.features(inputs)), dim=1)[1]
+
+    def save(self, add_state={}, file_name="model_param.pth"):
+        raise type(add_state) is not dict, "arg1:add_state must be dict"
+        raise "state_dict" in add_state, "cannot use key 'state_dict'"
+
+        _state = add_state
+        _state["state_dict"] = self.state_dict()
+        
+        try:
+            torch.save(_state, file_name)
+        except:
+            torch.save(self.state_dict(), "./model_param.pth.tmp")
+            print("save_error.\nsaved at ./model_param.pth.tmp only model params.")
 
     def _initialize_weights(self, all=False):
         for m in self.modules():
