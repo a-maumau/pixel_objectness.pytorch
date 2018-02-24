@@ -4,6 +4,7 @@
 import scipy.io
 import os
 import argparse
+from PIL import Image
 
 img_file_extension = '.png'
 mat_file_extension = '.mat'
