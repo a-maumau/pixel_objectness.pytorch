@@ -62,7 +62,7 @@ def train(args):
                                           target_transform=None)
 
                 trainval_data_set = PODataLoader(VOC_list=args.voc_trainval_image_list,
-                                          SBD_list=args.sbd_trainval_image_list,
+                                          SBD_list=args.sbd_val_image_list,
                                           voc_img_root=args.voc_image_dir,
                                           sbd_img_root=args.voc_mask_dir,
                                           voc_mask_root=args.sbd_image_dir,
