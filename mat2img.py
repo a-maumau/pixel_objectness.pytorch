@@ -23,7 +23,8 @@ def convert_mat2img(image_list, mat_dir="cls", output_dir="cls_png", prefix=""):
 
     for img_name in image_list:
         mat = read_mat(os.path.join(mat_dir, img_name+mat_file_extension), key='GTcls')
-        scipy.io.imsave(os.path.join(output_dir, img_name+img_file_extension), mat)
+        img = Image.fromarray(np.uint8(mat))
+        img.save(os.path.join(output_dir, img_name+img_file_extension), img.format)
         print("converted {}".dormat(img_name))
 
 def read_from_txt(txt_file="train.txt"):
