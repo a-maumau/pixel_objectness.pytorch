@@ -172,8 +172,8 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser()
 
         # settings
-        parser.add_argument('--voc_image_dir', type=str, default='./dataset/sbd/img', help='directory for train images')
-        parser.add_argument('--voc_mask_dir', type=str, default='./dataset/sbd/mask', help='directory for train mask images')
+        parser.add_argument('--voc_image_dir', type=str, default='./dataset/voc/img', help='directory for train images')
+        parser.add_argument('--voc_mask_dir', type=str, default='./dataset/voc/mask', help='directory for train mask images')
         parser.add_argument('--sbd_image_dir', type=str, default='./dataset/sbd/img', help='directory for train images')
         parser.add_argument('--sbd_mask_dir', type=str, default='./dataset/sbd/mask', help='directory for train mask images')
 
