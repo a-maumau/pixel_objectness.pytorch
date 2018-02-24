@@ -27,7 +27,7 @@ def convert_mat2img(image_list, mat_dir="cls", output_dir="cls_png", prefix=""):
         print("converted {}".dormat(img_name))
 
 def read_from_txt(txt_file="train.txt"):
-    with open(os.path.join(VOC_list), "r") as f:
+    with open(os.path.join(txt_file), "r") as f:
         image_names = f.readlines()
     
     image_names = [img_name.rstrip("\n") for img_name in image_names]
