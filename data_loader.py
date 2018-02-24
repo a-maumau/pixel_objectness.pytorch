@@ -80,12 +80,14 @@ class PODataLoader(_segmentation):
             opening the two datasets, there is same file name between both.
             so need to be distinguishable.
         """
-        voc_file_prefix = "voc_"
-        sbd_file_prefix = "sbd_"
+        #voc_file_prefix = "voc_"
+        #sbd_file_prefix = "sbd_"
 
-        def __init__(self, VOC_list, SBD_list, img_root, mask_root, pair_transform=None, input_transform=None, target_transform=None):
-                self.img_root = img_root
-                self.mask_root = mask_root
+        def __init__(self, VOC_list, SBD_list, voc_img_root, sbd_img_root, voc_mask_root, sbd_mask_root, pair_transform=None, input_transform=None, target_transform=None):
+                self.voc_img_root = voc_img_root
+                self.voc_mask_root = voc_mask_root
+                self.sbd_img_root = sbd_img_root
+                self.sbd_mask_root = sbd_mask_root
                 
                 # VOC12 seems to be an .txt file that has a per line style.
                 with open(os.path.join(VOC_list), "r") as file:
@@ -111,13 +113,13 @@ class PODataLoader(_segmentation):
                 for img_name in self.voc_image_names:
                         try:
                                 # save as num py array
-                                _img = np.asarray(Image.open(os.path.join(self.img_root, self.voc_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
+                                _img = np.asarray(Image.open(os.path.join(self.voc_img_root, self.voc_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
                                 # I dont know is this neede...
                                 _img.flags.writeable = True
                                 _img = Image.fromarray(np.uint8(_img))
                                 
                                 # same file name but it is .png
-                                _mask_img = np.asarray(Image.open(os.path.join(self.mask_root, self.voc_file_prefix+img_name+".png")).convert('P'))
+                                _mask_img = np.asarray(Image.open(os.path.join(self.voc_mask_root, self.voc_file_prefix+img_name+".png")).convert('P'))
                                 _mask_img.flags.writeable = True
                                 _mask_img = Image.fromarray(np.uint8(_mask_img))
 
@@ -133,13 +135,13 @@ class PODataLoader(_segmentation):
                 for img_name in self.sbd_image_names:
                         try:
                                 # save as num py array
-                                _img = np.asarray(Image.open(os.path.join(self.img_root, self.sbd_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
+                                _img = np.asarray(Image.open(os.path.join(self.sbd_img_root, self.sbd_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
                                 # I dont know is this neede...
                                 _img.flags.writeable = True
                                 _img = Image.fromarray(np.uint8(_img))
                                 
                                 # same file name but it is .png
-                                _mask_img = np.asarray(Image.open(os.path.join(self.mask_root, self.sbd_file_prefix+img_name+".png")).convert('P'))
+                                _mask_img = np.asarray(Image.open(os.path.join(self.sbd_mask_root, self.sbd_file_prefix+img_name+".png")).convert('P'))
                                 _mask_img.flags.writeable = True
                                 _mask_img = Image.fromarray(np.uint8(_mask_img))
 

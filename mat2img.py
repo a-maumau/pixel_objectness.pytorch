@@ -21,7 +21,7 @@ def convert_mat2img(image_list, mat_dir="cls", output_dir="cls_png", prefix=""):
         os.makedirs(output_dir)
 
     for img_name in image_list:
-        mat = read_mat(os.path.join(mat_dir, img_name+mat_file_extension), key='GTcls'):
+        mat = read_mat(os.path.join(mat_dir, img_name+mat_file_extension), key='GTcls')
         io.imsave(os.path.join(output_dir, img_name+img_file_extension), mat)
         print("converted {}".dormat(img_name))
 
