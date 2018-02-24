@@ -4,6 +4,7 @@
 import scipy.io
 import os
 import argparse
+import numpy as np
 from PIL import Image
 
 img_file_extension = '.png'
