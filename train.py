@@ -10,7 +10,7 @@ import argparse
 from tqdm import tqdm
 
 from model import POVGG16
-from data_loader import get_loader, PODataLoader
+from data_loader import get_loader, VOC12Seg, PODataLoader
 import pair_transforms
 import metric
 
@@ -71,12 +71,9 @@ def train(args):
                                           input_transform=input_transform,
                                           target_transform=None)
 
-                val_data_set = PODataLoader(VOC_list=args.voc_val_image_list,
-                                          SBD_list=args.sbd_val_image_list,
-                                          voc_img_root=args.voc_image_dir,
-                                          sbd_img_root=args.voc_mask_dir,
-                                          voc_mask_root=args.sbd_image_dir,
-                                          sbd_mask_root=args.sbd_mask_dir,
+                val_data_set = VOC12Seg(file_list_path=args.voc_val_image_list,
+                                          img_root=args.voc_image_dir,
+                                          mask_root=args.voc_mask_dir,
                                           pair_transform=val_pair_transform,
                                           input_transform=input_transform,
                                           target_transform=None)
