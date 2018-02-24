@@ -184,8 +184,7 @@ if __name__ == '__main__':
         parser.add_argument('--voc_trainval_image_list', type=str, default='./dataset/voc/trainval.txt', help='directory of image list of trainval')
         parser.add_argument('--voc_val_image_list', type=str, default='./dataset/voc/val.txt', help='directory of image list of validation')
         parser.add_argument('--sbd_train_image_list', type=str, default='./dataset/sbd/train.txt', help='directory of image list of train')
-        parser.add_argument('--sbd_trainval_image_list', type=str, default='./dataset/sbd/trainval.txt', help='directory of image list of trainval')
-        parser.add_argument('--sbd_val_image_list', type=str, default='./dataset/sbd/val.txt', help='directory of image list of validation')
+        parser.add_argument('--sbd_val_image_list', type=str, default='./dataset/sbd/val.txt', help='directory of image list of trainval')
 
         parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing')
         parser.add_argument('--save_dir', type=str, default="./log/", help='size for image after processing')
