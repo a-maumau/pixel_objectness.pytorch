@@ -10,7 +10,7 @@ import argparse
 from tqdm import tqdm
 
 from model import POVGG16
-from data_loader import get_loader, VOC12Seg
+from data_loader import get_loader, PODataLoader
 import pair_transforms
 import metric
 
@@ -51,23 +51,32 @@ def train(args):
                 input_transform = transforms.Compose([transforms.ToTensor()])
                 
                 # file_list_path, img_root, mask_root, pair_transform=None, input_transform=None, target_transform=None
-                train_data_set = VOC12Seg(file_list_path=args.train_image_list,
-                                          img_root=args.train_image_dir,
-                                          mask_root=args.train_mask_dir,
+                train_data_set = PODataLoader(VOC_list=args.voc_train_image_list,
+                                          SBD_list=args.sbd_train_image_list,
+                                          voc_img_root=args.voc_image_dir,
+                                          sbd_img_root=args.voc_mask_dir,
+                                          voc_mask_root=args.sbd_image_dir,
+                                          sbd_mask_root=args.sbd_mask_dir,
                                           pair_transform=pair_transform,
                                           input_transform=input_transform,
                                           target_transform=None)
 
-                trainval_data_set = VOC12Seg(file_list_path=args.trainval_image_list,
-                                          img_root=args.trainval_image_dir,
-                                          mask_root=args.trainval_mask_dir,
+                trainval_data_set = PODataLoader(VOC_list=args.voc_trainval_image_list,
+                                          SBD_list=args.sbd_trainval_image_list,
+                                          voc_img_root=args.voc_image_dir,
+                                          sbd_img_root=args.voc_mask_dir,
+                                          voc_mask_root=args.sbd_image_dir,
+                                          sbd_mask_root=args.sbd_mask_dir,
                                           pair_transform=pair_transform,
                                           input_transform=input_transform,
                                           target_transform=None)
 
-                val_data_set = VOC12Seg(file_list_path=args.val_image_list,
-                                          img_root=args.val_image_dir,
-                                          mask_root=args.val_mask_dir,
+                val_data_set = PODataLoader(VOC_list=args.voc_val_image_list,
+                                          SBD_list=args.sbd_val_image_list,
+                                          voc_img_root=args.voc_image_dir,
+                                          sbd_img_root=args.voc_mask_dir,
+                                          voc_mask_root=args.sbd_image_dir,
+                                          sbd_mask_root=args.sbd_mask_dir,
                                           pair_transform=val_pair_transform,
                                           input_transform=input_transform,
                                           target_transform=None)
@@ -165,16 +174,19 @@ def train(args):
 if __name__ == '__main__':
         parser = argparse.ArgumentParser()
 
-        # settings train.txt  trainval.txt  val.txt
-        parser.add_argument('--train_image_dir', type=str, default='./dataset/img', help='directory for train images')
-        parser.add_argument('--train_mask_dir', type=str, default='./dataset/mask', help='directory for train mask images')
-        parser.add_argument('--trainval_image_dir', type=str, default='./dataset/img', help='directory for train images')
-        parser.add_argument('--trainval_mask_dir', type=str, default='./dataset/mask', help='directory for train mask images')
-        parser.add_argument('--val_image_dir', type=str, default='./dataset/img', help='directory for val images')
-        parser.add_argument('--val_mask_dir', type=str, default='./dataset/mask', help='directory for validation mask images')
-        parser.add_argument('--train_image_list', type=str, default='./dataset/train.txt', help='directory of json file for training dataset')
-        parser.add_argument('--trainval_image_list', type=str, default='./dataset/trainval.txt', help='directory of json file for validation dataset')
-        parser.add_argument('--val_image_list', type=str, default='./dataset/val.txt', help='directory of json file for validation dataset')
+        # settings
+        parser.add_argument('--voc_image_dir', type=str, default='./dataset/sbd/img', help='directory for train images')
+        parser.add_argument('--voc_mask_dir', type=str, default='./dataset/sbd/mask', help='directory for train mask images')
+        parser.add_argument('--sbd_image_dir', type=str, default='./dataset/sbd/img', help='directory for train images')
+        parser.add_argument('--sbd_mask_dir', type=str, default='./dataset/sbd/mask', help='directory for train mask images')
+
+        parser.add_argument('--voc_train_image_list', type=str, default='./dataset/voc/train.txt', help='directory of image list of train')
+        parser.add_argument('--voc_trainval_image_list', type=str, default='./dataset/voc/trainval.txt', help='directory of image list of trainval')
+        parser.add_argument('--voc_val_image_list', type=str, default='./dataset/voc/val.txt', help='directory of image list of validation')
+        parser.add_argument('--sbd_train_image_list', type=str, default='./dataset/sbd/train.txt', help='directory of image list of train')
+        parser.add_argument('--sbd_trainval_image_list', type=str, default='./dataset/sbd/trainval.txt', help='directory of image list of trainval')
+        parser.add_argument('--sbd_val_image_list', type=str, default='./dataset/sbd/val.txt', help='directory of image list of validation')
+
         parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing')
         parser.add_argument('--save_dir', type=str, default="./log/", help='size for image after processing')
         parser.add_argument('--save_every', type=int, default=10, help='size for image after processing')
