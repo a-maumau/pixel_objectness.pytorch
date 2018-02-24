@@ -113,13 +113,13 @@ class PODataLoader(_segmentation):
                 for img_name in self.voc_image_names:
                         try:
                                 # save as num py array
-                                _img = np.asarray(Image.open(os.path.join(self.voc_img_root, self.voc_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
+                                _img = np.asarray(Image.open(os.path.join(self.voc_img_root, img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
                                 # I dont know is this neede...
                                 _img.flags.writeable = True
                                 _img = Image.fromarray(np.uint8(_img))
                                 
                                 # same file name but it is .png
-                                _mask_img = np.asarray(Image.open(os.path.join(self.voc_mask_root, self.voc_file_prefix+img_name+".png")).convert('P'))
+                                _mask_img = np.asarray(Image.open(os.path.join(self.voc_mask_root, img_name+".png")).convert('P'))
                                 _mask_img.flags.writeable = True
                                 _mask_img = Image.fromarray(np.uint8(_mask_img))
 
