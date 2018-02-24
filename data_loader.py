@@ -74,6 +74,84 @@ class VOC12Seg(_segmentation):
                                 print("pass {}".format(img_name))
 
                 self.data_num = len(self.img)
+
+class PODataLoader(_segmentation):
+        """
+            opening the two datasets, there is same file name between both.
+            so need to be distinguishable.
+        """
+        voc_file_prefix = "voc_"
+        sbd_file_prefix = "sbd_"
+
+        def __init__(self, VOC_list, SBD_list, img_root, mask_root, pair_transform=None, input_transform=None, target_transform=None):
+                self.img_root = img_root
+                self.mask_root = mask_root
+                
+                # VOC12 seems to be an .txt file that has a per line style.
+                with open(os.path.join(VOC_list), "r") as file:
+                        self.voc_image_names = file.readlines()
+
+
+                with open(os.path.join(SBD_list), "r") as file:
+                        self.sbd_image_names = file.readlines()
+                        
+                self.voc_image_names = [img_name.rstrip("\n") for img_name in self.voc_image_names]
+                self.sbd_image_names = [img_name.rstrip("\n") for img_name in self.sbd_image_names]
+
+                self.input_transform = input_transform
+                self.target_transform = target_transform
+                self.pair_transform = pair_transform
+
+                self.image_names = []
+                self.img = []
+                self.mask_img = []
+
+                # this part is redundant for the input images...
+                # load voc dataset
+                for img_name in self.voc_image_names:
+                        try:
+                                # save as num py array
+                                _img = np.asarray(Image.open(os.path.join(self.img_root, self.voc_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
+                                # I dont know is this neede...
+                                _img.flags.writeable = True
+                                _img = Image.fromarray(np.uint8(_img))
+                                
+                                # same file name but it is .png
+                                _mask_img = np.asarray(Image.open(os.path.join(self.mask_root, self.voc_file_prefix+img_name+".png")).convert('P'))
+                                _mask_img.flags.writeable = True
+                                _mask_img = Image.fromarray(np.uint8(_mask_img))
+
+                                self.image_names.append(img_name)
+                                self.img.append(_img)
+                                self.mask_img.append(_mask_img)
+
+                        except Exception as e:
+                                print(e)
+                                print("pass {}".format(img_name))
+
+                # load sbd dataset
+                for img_name in self.sbd_image_names:
+                        try:
+                                # save as num py array
+                                _img = np.asarray(Image.open(os.path.join(self.img_root, self.sbd_file_prefix+img_name+".jpg")).convert('RGB')) # not thinking there is a empty input...
+                                # I dont know is this neede...
+                                _img.flags.writeable = True
+                                _img = Image.fromarray(np.uint8(_img))
+                                
+                                # same file name but it is .png
+                                _mask_img = np.asarray(Image.open(os.path.join(self.mask_root, self.sbd_file_prefix+img_name+".png")).convert('P'))
+                                _mask_img.flags.writeable = True
+                                _mask_img = Image.fromarray(np.uint8(_mask_img))
+
+                                self.image_names.append(img_name)
+                                self.img.append(_img)
+                                self.mask_img.append(_mask_img)
+
+                        except Exception as e:
+                                print(e)
+                                print("pass {}".format(img_name))
+
+                self.data_num = len(self.img)
 """
 class MSCOCO_Stuff(_segmentation):
 	def __init__(self, img_root, mask_root, json_path, pair_transform=None, input_transform=None, target_transform=None):
