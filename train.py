@@ -193,7 +193,7 @@ if __name__ == '__main__':
         parser.add_argument('--epochs', type=int, default=200)
         parser.add_argument('--batch_size', type=int, default=8)
         parser.add_argument('--batch_batch_size', type=int, default=64)
-        parser.add_argument('--num_workers', type=int, default=4)
+        parser.add_argument('--num_workers', type=int, default=8)
         parser.add_argument('--learning_rate', type=float, default=0.001)
         parser.add_argument('--decay_every', type=int, default=50)
         parser.add_argument('--gpu_device_num', type=int, default=0)
