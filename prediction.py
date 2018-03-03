@@ -41,7 +41,7 @@ def train(args):
         for idx, m in enumerate(model.modules()):
             print(idx, '->', m)
 
-        input_transform = transforms.Compose([transforms.Resize(args.resize_size), transforms.CenterCrop(args.resize_size), transforms.ToTensor()])
+        input_transform = transforms.Compose([transforms.Scale(args.resize_size), transforms.CenterCrop(args.resize_size), transforms.ToTensor()])
 
         input_data = TestDataLoader(img_dir=args.image_dir, input_transform=input_transform)
 
