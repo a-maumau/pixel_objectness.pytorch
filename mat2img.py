@@ -27,7 +27,7 @@ def convert_mat2img(image_list, mat_dir="cls", output_dir="cls_png", prefix=""):
         mat = read_mat(os.path.join(mat_dir, img_name+mat_file_extension), key='GTcls')
         img = Image.fromarray(np.uint8(mat))
         img.save(os.path.join(output_dir, img_name+img_file_extension), img.format)
-        print("converted {}".format(img_name))
+        print("converted {} to {}".format(img_name, os.path.join(output_dir, img_name+img_file_extension)))
 
 def read_from_txt(txt_file="train.txt"):
     with open(os.path.join(txt_file), "r") as f:
