@@ -123,6 +123,7 @@ def train(args):
                                 _trainval_loader.set_description("train val")
                                 trainval_total_loss = 0.0
                                 pix_acc = 0.0
+                                batch_count = 0
                                 for img, mask in _trainval_loader:
                                         images = Variable(img).cuda()
                                         masks = Variable(mask).cuda()
@@ -131,12 +132,14 @@ def train(args):
 
                                         outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
                                         batch_loss = model.loss(outputs, masks)
-                                        #pred = model.inference(images)
-                                        #pix_acc += metric.pix_acc(pred, masks)
+                                        pred = model.inference(images)
+                                        pix_acc += metric.pix_acc(pred, masks)
                                         
                                         trainval_total_loss += batch_loss.data[0]
 
-                                tqdm.write("[#{}] trainval total loss: {:5.5f}, pix acc.:{:5.5f}".format(epoch+1, trainval_total_loss, pix_acc))
+                                        batch_count += 1
+
+                                tqdm.write("[#{}] trainval total loss: {:5.5f}, mean pix acc.:{:5.5f}".format(epoch+1, trainval_total_loss, pix_acc/batch_count))
     
                         if (epoch+1) % args.save_every == 1:
                                 state = {'epoch': epoch + 1,
@@ -150,6 +153,7 @@ def train(args):
                 _val_loader.set_description("val")
                 val_total_loss = 0.0
                 pix_acc = 0.0
+                batch_count = 0
                 for img, mask in _val_loader:
                         images = Variable(img).cuda()
                         masks = Variable(mask).cuda()
@@ -160,11 +164,11 @@ def train(args):
                         outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
                         #batch_loss = criterion(outputs, masks)
                         batch_loss = model.loss(outputs, masks)
-                        #pred = model.inference(images)
-                        #pix_acc += metric.pix_acc(pred, masks)
+                        pred = model.inference(images)
+                        pix_acc += metric.pix_acc(pred, masks)
                         
                         val_total_loss += batch_loss.data[0]
-                tqdm.write("val total loss: {:5.5f}, pix acc.: {:5.5f}".format(val_total_loss, pix_acc))
+                tqdm.write("val total loss: {:5.5f}, mean pix acc.: {:5.5f}".format(val_total_loss, pix_acc/batch_count))
 
 if __name__ == '__main__':
         parser = argparse.ArgumentParser()
