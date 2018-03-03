@@ -51,8 +51,10 @@ def train(args):
             images = Variable(img).cuda()
             
             outputs = model(images)
-            outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
-            torchvision.utils.save_image(outputs, "{}_input.png".format(file_name), nrow=0, padding=0, normalize=True)
+            outputs = F.upsample(outputs, size=[args.resize_size, args.resize_size], mode='bilinear')
+            outputs = model.inference(outputs)
+
+            torchvision.utils.save_image(images, "{}_input.png".format(file_name), nrow=0, padding=0, normalize=True)
             torchvision.utils.save_image(outputs, "{}_predict.png".format(file_name), nrow=0, padding=0, normalize=True)
 
 
