@@ -3,6 +3,8 @@
   it would be easy to implement in numpy, I think.
 """
 
+import torch
+
 def pix_acc(pred_labels, gt_labels):
     """
         return the accuracy of all pixels
