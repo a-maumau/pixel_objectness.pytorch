@@ -7,6 +7,7 @@ from torch.autograd import Variable
 
 import os
 import argparse
+from datetime import datetime
 from tqdm import tqdm
 
 from model import POVGG16
@@ -146,6 +147,8 @@ def train(args):
                                          'optimizer_state_dict' : optimizer.state_dict()}
                                 model.save(add_state=state, file_name=os.path.join(args.save_dir,'model_param_e{}.pkl'.format(epoch+1)))
                                 tqdm.write("model saved.")
+
+                model.save(add_state=state, file_name=os.path.join(args.save_dir,'model_param_fin_{}.pkl'.format(epoch+1, datetime.now().strftime("%Y%m%d_%H-%M-%S"))))
 
                 _val_loader = tqdm(train_loader, ncols=80)
                 _val_loader.set_description("val")
