@@ -6,9 +6,10 @@
 def pix_acc(pred_labels, gt_labels):
     """
         return the accuracy of all pixels
+        pred_labels and gt_labels should be batch x w x h
     """
-    pix = pred_labels.shape[1]*pred_labels.shape[2]
-    all_pix_acc = ((pred_labels-gt_labels) == 0).sum()/pix
+    pix = pred_labels.size()[1]*pred_labels.shape[2]
+    return torch.sum(((pred_labels-gt_labels) == 0).view(2,4).sum(1).type(torch.FloatTensor)/pix)
 
 def mean_pix_acc(pred_labels, gt_labels, class_num):
     """
