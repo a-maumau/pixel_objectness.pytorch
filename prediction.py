@@ -45,7 +45,7 @@ def train(args):
 
         input_data = TestDataLoader(img_dir=args.image_dir, input_transform=input_transform)
 
-        data_loader = get_test_loader(train_data_set, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+        data_loader = get_test_loader(input_data, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 
         for img, file_name in tqdm(data_loader, ncols=80):
             images = Variable(img).cuda()
