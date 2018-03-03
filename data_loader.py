@@ -198,6 +198,11 @@ def collate_fn(data):
     
     return _img, _mask_img
 
+def collate_fn_test(data):
+    _img, _img_names = zip(*data)
+    _img = torch.stack(_img, 0)    
+    return _img, _img_names
+
 
 def get_loader( data_set, batch_size, shuffle, num_workers):
     data_loader = torch.utils.data.DataLoader(dataset=data_set, 
@@ -212,6 +217,7 @@ def get_test_loader( data_set, batch_size, shuffle, num_workers):
     data_loader = torch.utils.data.DataLoader(dataset=data_set, 
                                               batch_size=batch_size,
                                               shuffle=shuffle,
-                                              num_workers=num_workers)
+                                              num_workers=num_workers,
+                                              collate_fn=collate_fn_test)
 
     return data_loader
