@@ -50,9 +50,8 @@ def train(args):
         for img, file_name in tqdm(data_loader, ncols=80):
             images = Variable(img).cuda()
             
-            outputs = model(images)
+            utputs = model.inference(images)
             outputs = F.upsample(outputs, size=[args.resize_size, args.resize_size], mode='bilinear')
-            outputs = model.inference(outputs)
 
             torchvision.utils.save_image(images, "{}_input.png".format(file_name), nrow=0, padding=0, normalize=True)
             torchvision.utils.save_image(outputs, "{}_predict.png".format(file_name), nrow=0, padding=0, normalize=True)
