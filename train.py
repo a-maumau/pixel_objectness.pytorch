@@ -141,10 +141,9 @@ def train(args):
 
                                 tqdm.write("[#{}] trainval total loss: {:5.5f}, pix acc.:{:5.5f}".format(epoch+1, trainval_total_loss, pix_acc))
     
-                        if (epoch+1) % args.save_every == 0:
+                        if (epoch+1) % args.save_every == 1:
                                 state = {'epoch': epoch + 1,
                                          'optimizer_state_dict' : optimizer.state_dict()}
-
                                 model.save(add_state=state, file_name=os.path.join(args.save_dir,'model_param_e{}.pkl'.format(epoch+1)))
                                 tqdm.write("model saved.")
 
