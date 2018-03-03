@@ -200,8 +200,8 @@ class POVGG16(nn.Module):
         return torch.max(torch.nn.functional.softmax(self.features(inputs)), dim=1)[1]
 
     def save(self, add_state={}, file_name="model_param.pth"):
-        assert type(add_state) is not dict, "arg1:add_state must be dict"
-        assert "state_dict" in add_state, "cannot use key 'state_dict'"
+        assert type(add_state) is dict, "arg1:add_state must be dict"
+        assert "state_dict" not in add_state, "cannot use key 'state_dict'"
 
         _state = add_state
         _state["state_dict"] = self.state_dict()
