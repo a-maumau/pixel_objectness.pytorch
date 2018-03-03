@@ -23,7 +23,7 @@ def pix_acc(pred_labels, gt_labels):
     mean_acc = torch.sum(match_labels_acc)/batch_size
     """
     # same thing.
-    return torch.sum(((pred_labels-gt_labels) == 0).view(2,4).sum(1).type(torch.FloatTensor)/pred_labels.size()[1]*pred_labels.shape[2])/pred_labels.size()[0]
+    return torch.sum(((pred_labels-gt_labels) == 0).view(2,4).sum(1).type(torch.FloatTensor)/(pred_labels.size()[1]*pred_labels.shape[2]))/pred_labels.size()[0]
 
 def mean_pix_acc(pred_labels, gt_labels, class_num):
     """
