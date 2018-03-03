@@ -171,7 +171,7 @@ class TestDataLoader(data.Dataset):
                 _img.flags.writeable = True
                 _img = Image.fromarray(np.uint8(_img))
                 
-                self.image_names.append(img_name)
+                self.image_names.append(img_name.replace(".jpg", ""))
                 self.img.append(_img)
 
             except Exception as e:

@@ -134,7 +134,7 @@ class POVGG16(nn.Module):
         self.input_channel = input_channel
         self.num_class = num_class
         
-        self.nll_loss = nn.NLLLoss2d(size_average=True)
+        self.nll_loss = nn.NLLLoss2d()
 
         # I hate writing in for-loops.
         # Name must be "features" because in the pretrained data's dict is named "features"
@@ -183,7 +183,7 @@ class POVGG16(nn.Module):
             nn.Conv2d(1024, 1024, stride=1, kernel_size=3, padding=1),
             nn.ReLU(inplace=self.inplace_flag),
             nn.Dropout(inplace=self.inplace_flag),
-            nn.Conv2d(1024,  self.num_class, stride=1, kernel_size=1, padding=1)
+            nn.Conv2d(1024, self.num_class, stride=1, kernel_size=1, padding=1)
         )
 
         if init_weights:
@@ -197,7 +197,7 @@ class POVGG16(nn.Module):
         return self.nll_loss(F.log_softmax(inputs), targets)
 
     def inference(self, inputs):
-        return torch.max(torch.nn.functional.softmax(self.features(inputs)), dim=1)[1]
+        return torch.max(torch.nn.functional.softmax(self.features(inputs)), dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
 
     def save(self, add_state={}, file_name="model_param.pth"):
         assert type(add_state) is dict, "arg1:add_state must be dict"

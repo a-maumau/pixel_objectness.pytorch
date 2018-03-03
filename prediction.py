@@ -9,13 +9,18 @@ from torch.autograd import Variable
 import os
 import argparse
 from tqdm import tqdm
+from PIL import Image
 
 from model import POVGG16
 from data_loader import get_test_loader, TestDataLoader
 import pair_transforms
 import metric
 
-def train(args):
+def save_image_tensor(tensor):
+    im = Image.fromarray()
+    im.save(filename)
+
+def prediction(args):
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
             
@@ -49,14 +54,13 @@ def train(args):
 
         for img, file_name in tqdm(data_loader, ncols=80):
             images = Variable(img).cuda()
-            
+
             outputs = model.inference(images)
             outputs = F.upsample(outputs, size=[args.resize_size, args.resize_size], mode='bilinear')
 
-            torchvision.utils.save_image(images, "{}_input.png".format(file_name), nrow=0, padding=0, normalize=True)
-            torchvision.utils.save_image(outputs, "{}_predict.png".format(file_name), nrow=0, padding=0, normalize=True)
-
-
+            for n in range(outputs.size()[0]):
+                torchvision.utils.save_image(images[n].cpu().data, "{}_input.png".format(os.path.join(args.save_dir, file_name[n])), nrow=0, padding=0, normalize=False)
+                torchvision.utils.save_image(outputs[n].cpu().data, "{}_predict.png".format(os.path.join(args.save_dir, file_name[n])), nrow=0, padding=0, normalize=False)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -64,7 +68,7 @@ if __name__ == '__main__':
     # settings
     parser.add_argument('--image_dir', type=str, default='./dataset/test', help='directory for train images')
     parser.add_argument('--resize_size', type=int, default=321, help='resize for input')
-    parser.add_argument('--save_dir', type=str, default="./log/", help='save dir')
+    parser.add_argument('--save_dir', type=str, default="./predicted_image/", help='save dir')
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--gpu_device_num', type=int, default=0)
@@ -77,5 +81,5 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    train(args)
+    prediction(args)
     

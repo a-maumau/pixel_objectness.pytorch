@@ -41,7 +41,7 @@ def train(args):
                 for idx, m in enumerate(model.modules()):
                         print(idx, '->', m)
 
-                optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=1e-6)
+                optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=5e-5)
                 batch_batch_count = 0
 
                 pair_transform = pair_transforms.PairCompose([pair_transforms.PairRandomCrop(args.crop_size),
@@ -84,7 +84,8 @@ def train(args):
                 val_loader= get_loader(val_data_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
                 # loss
-                criterion = nn.NLLLoss2d()
+                #m = nn.LogSoftmax()
+                #criterion = nn.NLLLoss2d()
                 
                 epochs = tqdm(range(args.epochs), ncols=80)
 
@@ -104,11 +105,8 @@ def train(args):
                                 
                                 outputs = model(images)
 
-                                #outputs = F.upsample(outputs, scale_factor=8, mode='bilinear')
                                 outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
 
-                                #batch_loss = F.cross_entropy(outputs, masks)
-                                #batch_loss = criterion(outputs, masks)
                                 batch_loss = model.loss(outputs, masks)
                                 
                                 epoch_total_loss += batch_loss.data[0]
@@ -131,9 +129,7 @@ def train(args):
                                         
                                         outputs = model(images)
 
-                                        #outputs = F.upsample(outputs, scale_factor=8)
                                         outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
-                                        #batch_loss = criterion(outputs, masks)
                                         batch_loss = model.loss(outputs, masks)
                                         #pred = model.inference(images)
                                         #pix_acc += metric.pix_acc(pred, masks)
@@ -149,7 +145,7 @@ def train(args):
                                 tqdm.write("model saved.")
 
                 model.save(add_state=state, file_name=os.path.join(args.save_dir,'model_param_fin_{}.pkl'.format(epoch+1, datetime.now().strftime("%Y%m%d_%H-%M-%S"))))
-
+                
                 _val_loader = tqdm(train_loader, ncols=80)
                 _val_loader.set_description("val")
                 val_total_loss = 0.0
