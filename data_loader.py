@@ -153,7 +153,7 @@ class PODataLoader(_segmentation):
 
 class TestDataLoader(data.Dataset):
     def __init__(self, img_dir, input_transform=None):
-        self.img_dir = mg_dir                
+        self.img_dir = img_dir                
         # VOC12 seems to be an .txt file that has a per line style.
         images_list = os.listdir(self.img_dir)
 
