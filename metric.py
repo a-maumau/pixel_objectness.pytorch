@@ -10,20 +10,26 @@ def pix_acc(pred_labels, gt_labels):
         return the accuracy of all pixels
         pred_labels and gt_labels should be batch x w x h
     """
-    """
-    pix = pred_labels.size()[1]*pred_labels.size()[2]
-    bstch_size = pred_labels.size()[0]
 
-    match_labels = (pred_labels-gt_labels) == 0
+    w = pred_labels.size()[2]
+    h = pred_labels.size()[3]
+    pix = w*h
+    batch_size = pred_labels.size()[0]
+
+    #match_labels = (pred_labels.type(torch.LongTensor).squeeze(1)-gt_labels) == 0
+
+    #print(match_labels.size())
 
     # calc sum, align in straight
-    match_labels = match_labels.view(2,4)
-    match_labels_acc = match_labels.sum(1).type(torch.FloatTensor)/pix
+    #match_labels = match_labels.view(batch_size,pix)
+    #match_labels_acc = match_labels.sum(1).type(torch.FloatTensor)/pix
 
-    mean_acc = torch.sum(match_labels_acc)/batch_size
-    """
+    #mean_acc = torch.sum(match_labels_acc)/batch_size
+
+    #return mean_acc
+    
     # same thing.
-    return torch.sum(((pred_labels-gt_labels) == 0).view(2,4).sum(1).type(torch.FloatTensor)/(pred_labels.size()[1]*pred_labels.shape[2]))/pred_labels.size()[0]
+    return torch.sum(((pred_labels.type(torch.LongTensor).squeeze(1)-gt_labels) == 0).view(batch_size,pix).sum(1).type(torch.FloatTensor)/pix)/batch_size
 
 def mean_pix_acc(pred_labels, gt_labels, class_num):
     """

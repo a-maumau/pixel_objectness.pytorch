@@ -197,11 +197,19 @@ class POVGG16(nn.Module):
         return self.nll_loss(F.log_softmax(inputs), targets)
 
     def inference(self, inputs):
+        #pred = self.features(inputs)
+        #pred = torch.nn.functional.softmax(pred)
+        #pred = torch.max(pred, dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
+        #return pred
+        
+        # same thing
         return torch.max(torch.nn.functional.softmax(self.features(inputs)), dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
 
     def save(self, add_state={}, file_name="model_param.pth"):
         assert type(add_state) is dict, "arg1:add_state must be dict"
-        assert "state_dict" not in add_state, "cannot use key 'state_dict'"
+        
+        if "state_dict" in add_state:
+            print("the value of key:'state_dict' will be over write with model's state_dict parameters")
 
         _state = add_state
         _state["state_dict"] = self.state_dict()
