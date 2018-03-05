@@ -17,7 +17,6 @@ class _segmentation(data.Dataset):
         #_mask_img = Image.open( os.path.join(self.mask_root,re.sub(r'.jpg', "",self.images[index]["file_name"])+".png"))
         
         if self.pair_transform is not None:
-                #_img, _mask_img = self.pair_transform(_img, _mask_img)
             _img, _mask_img = self.pair_transform(self.img[index], self.mask_img[index])
                 
         if self.input_transform is not None:
@@ -33,6 +32,7 @@ class _segmentation(data.Dataset):
     def __len__(self):
         return self.data_num
 
+# for loading voc dataset
 class VOC12Seg(_segmentation):
     def __init__(self, file_list_path, img_root, mask_root, pair_transform=None, input_transform=None, target_transform=None):
         self.img_root = img_root
@@ -48,7 +48,7 @@ class VOC12Seg(_segmentation):
         self.input_transform = input_transform
         self.target_transform = target_transform
         self.pair_transform = pair_transform
-        #self.data_num = len(self.images_names)
+
         self.img = []
         self.mask_img = []
 
@@ -74,6 +74,7 @@ class VOC12Seg(_segmentation):
 
             self.data_num = len(self.img)
 
+# pixel Objectnes training
 class PODataLoader(_segmentation):
     """
         opening the two datasets, there is same file name between both.
@@ -153,16 +154,15 @@ class PODataLoader(_segmentation):
 
 class TestDataLoader(data.Dataset):
     def __init__(self, img_dir, input_transform=None):
-        self.img_dir = img_dir                
-        # VOC12 seems to be an .txt file that has a per line style.
+        self.img_dir = img_dir
+
         images_list = os.listdir(self.img_dir)
 
         self.input_transform = input_transform
         self.image_names = []
         self.img = []
 
-        # this part is redundant for the input images...
-        # load voc dataset
+        # load images
         for img_name in images_list:
             try:
                 # save as num py array
@@ -200,10 +200,12 @@ def collate_fn(data):
 
 def collate_fn_test(data):
     _img, _img_names = zip(*data)
-    _img = torch.stack(_img, 0)    
+    _img = torch.stack(_img, 0)   
+
+    # _img_names is for to name when saving a file 
     return _img, _img_names
 
-
+# data loader for dataset
 def get_loader( data_set, batch_size, shuffle, num_workers):
     data_loader = torch.utils.data.DataLoader(dataset=data_set, 
                                               batch_size=batch_size,
@@ -213,6 +215,7 @@ def get_loader( data_set, batch_size, shuffle, num_workers):
 
     return data_loader
 
+# data loader for test image
 def get_test_loader( data_set, batch_size, shuffle, num_workers):
     data_loader = torch.utils.data.DataLoader(dataset=data_set, 
                                               batch_size=batch_size,

@@ -16,10 +16,6 @@ from data_loader import get_test_loader, TestDataLoader
 import pair_transforms
 import metric
 
-def save_image_tensor(tensor):
-    im = Image.fromarray()
-    im.save(filename)
-
 def prediction(args):
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
@@ -58,6 +54,7 @@ def prediction(args):
             outputs = model.inference(images)
             outputs = F.upsample(outputs, size=[args.resize_size, args.resize_size], mode='bilinear')
 
+            # save all
             for n in range(outputs.size()[0]):
                 torchvision.utils.save_image(images[n].cpu().data, "{}_input.png".format(os.path.join(args.save_dir, file_name[n])), nrow=0, padding=0, normalize=False)
                 torchvision.utils.save_image(outputs[n].cpu().data, "{}_predict.png".format(os.path.join(args.save_dir, file_name[n])), nrow=0, padding=0, normalize=False)
@@ -66,18 +63,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # settings
-    parser.add_argument('--image_dir', type=str, default='./dataset/test', help='directory for train images')
-    parser.add_argument('--resize_size', type=int, default=321, help='resize for input')
-    parser.add_argument('--save_dir', type=str, default="./predicted_image/", help='save dir')
-    parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--num_workers', type=int, default=8)
-    parser.add_argument('--gpu_device_num', type=int, default=0)
+    parser.add_argument('--image_dir', type=str, default='./dataset/test', help='directory for test images')
+
+    # detail settings
+    parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing') # paper default
+    parser.add_argument('--save_dir', type=str, default="./log/predicted", help='dir of saving log and model parameters and so on.')
+    parser.add_argument('--batch_size', type=int, default=10, help="mini batch size")
+    parser.add_argument('--num_workers', type=int, default=8, help="worker num. of data loader")
+    parser.add_argument('--gpu_device_num', type=int, default=0, help="device number of gpu")
     
     parser.add_argument('--trained_path', type=str, default="./log/pretrained.pth", help="")
     
     # flags
-    parser.add_argument('-batch_batch', action="store_true", default=False, help='calc in batch in batch')
-    parser.add_argument('-use_tensorboard', action="store_true", default=False, help='calc in batch in batch')
+    parser.add_argument('-use_tensorboard', action="store_true", default=False, help='use TensorBoard') # not ready yet
+    parser.add_argument('-save_pair', action="store_true", default=False, help='save image in pair') # not ready yet
     
     args = parser.parse_args()
     

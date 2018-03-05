@@ -20,7 +20,7 @@ model_urls = {
 }
 """
 
-# base_net
+# base net
 class VGG(nn.Module):
     def __init__(self, features, num_classes=1000, init_weights=True):
         super(VGG, self).__init__()
@@ -57,7 +57,6 @@ class VGG(nn.Module):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
-
 def make_layers(cfg, batch_norm=False):
     layers = []
     in_channels = 3
@@ -85,7 +84,6 @@ def vgg16(pretrained=False, **kwargs):
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['vgg16']))
     return model
-
 """
 which will make
 
@@ -126,6 +124,7 @@ nn.ReLU(inplace=True),
 nn.MaxPool2d(kernel_size=2, stride=2), #diff
 """
 
+# model of Pixel Objectness which is based on VGG Net
 class POVGG16(nn.Module):
     inplace_flag = False
     def __init__(self, input_channel=3, num_class=2, init_weights=True):
@@ -166,7 +165,7 @@ class POVGG16(nn.Module):
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
             nn.ReLU(inplace=self.inplace_flag),
             #nn.MaxPool2d(kernel_size=3, stride=1, padding=0, dilation=1), # this part must be a dilated convolution? is equal?
-            nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=2, dilation=2),
+            nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=2, dilation=2), # I don't know this part is correct
 
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
             nn.ReLU(inplace=self.inplace_flag),
@@ -175,7 +174,7 @@ class POVGG16(nn.Module):
             nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=1),
             nn.ReLU(inplace=self.inplace_flag),
             #nn.MaxPool2d(kernel_size=3, stride=1, padding=0, dilation=1), # this part must be a dilated convolution? is equal?
-            nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=2, dilation=2),
+            nn.Conv2d(512, 512, stride=1, kernel_size=3, padding=2, dilation=2), # I don't know this part is correct
 
             nn.Conv2d(512, 1024, stride=1, kernel_size=3, padding=1),
             nn.ReLU(inplace=self.inplace_flag),

@@ -17,197 +17,195 @@ import pair_transforms
 import metric
 
 def train(args):
-        if not os.path.exists(args.save_dir):
-                os.makedirs(args.save_dir)
+    if not os.path.exists(args.save_dir):
+        os.makedirs(args.save_dir)
+            
+    with torch.cuda.device(args.gpu_device_num):
+        def to_var(x, volatile=False):
+            if torch.cuda.is_available():
+                x = x.cuda()
+            return Variable(x, volatile=volatile)
+
+        model = POVGG16().cuda()
+
+        if args.trained_path is not None:
+            try:
+                chkp = torch.load(args.trained_path)
+                model_dict = model.state_dict()
                 
-        with torch.cuda.device(args.gpu_device_num):
-                def to_var(x, volatile=False):
-                        if torch.cuda.is_available():
-                                x = x.cuda()
-                        return Variable(x, volatile=volatile)
+                pretrained_dict = {k: v for k, v in chkp.items() if k in model_dict}
+                #print(pretrained_dict.keys())
+                model_dict.update(pretrained_dict)
+                model.load_state_dict(model_dict)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                print(e)
+                print("cannot load pretrained data.")
 
-                model = POVGG16().cuda()
+        print(args)
+        for idx, m in enumerate(model.modules()):
+            print(idx, '->', m)
 
-                if args.trained_path is not None:
-                        try:
-                                chkp = torch.load(args.trained_path)
-                                model_dict = model.state_dict()
-                                
-                                pretrained_dict = {k: v for k, v in chkp.items() if k in model_dict}
-                                #print(pretrained_dict.keys())
-                                model_dict.update(pretrained_dict)
-                                model.load_state_dict(model_dict)
-                        except Exception as e:
-                                import traceback
-                                traceback.print_exc()
-                                print(e)
-                                print("cannot load pretrained data.")
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=5e-5)
+        batch_batch_count = 0
 
-                print(args)
-                for idx, m in enumerate(model.modules()):
-                        print(idx, '->', m)
+        pair_transform = pair_transforms.PairCompose([pair_transforms.PairRandomCrop(args.crop_size),
+                                                      pair_transforms.PairRandomHorizontalFlip()])
 
-                optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=5e-5)
-                batch_batch_count = 0
+        val_pair_transform = pair_transforms.PairCompose([pair_transforms.PairRandomCrop(args.crop_size)])
 
-                pair_transform = pair_transforms.PairCompose([pair_transforms.PairRandomCrop(args.crop_size),
-                                                              pair_transforms.PairRandomHorizontalFlip()])
+        input_transform = transforms.Compose([transforms.ToTensor()])
+        
+        # file_list_path, img_root, mask_root, pair_transform=None, input_transform=None, target_transform=None
+        train_data_set = PODataLoader(VOC_list=args.voc_train_image_list,
+                                  SBD_list=args.sbd_train_image_list,
+                                  voc_img_root=args.voc_image_dir,
+                                  sbd_img_root=args.sbd_image_dir,
+                                  voc_mask_root=args.voc_mask_dir,
+                                  sbd_mask_root=args.sbd_mask_dir,
+                                  pair_transform=pair_transform,
+                                  input_transform=input_transform,
+                                  target_transform=None)
 
-                val_pair_transform = pair_transforms.PairCompose([pair_transforms.PairRandomCrop(args.crop_size)])
+        trainval_data_set = PODataLoader(VOC_list=args.voc_trainval_image_list,
+                                  SBD_list=args.sbd_val_image_list,
+                                  voc_img_root=args.voc_image_dir,
+                                  sbd_img_root=args.sbd_image_dir,
+                                  voc_mask_root=args.voc_mask_dir,
+                                  sbd_mask_root=args.sbd_mask_dir,
+                                  pair_transform=pair_transform,
+                                  input_transform=input_transform,
+                                  target_transform=None)
 
-                input_transform = transforms.Compose([transforms.ToTensor()])
+        val_data_set = VOC12Seg(file_list_path=args.voc_val_image_list,
+                                  img_root=args.voc_image_dir,
+                                  mask_root=args.voc_mask_dir,
+                                  pair_transform=val_pair_transform,
+                                  input_transform=input_transform,
+                                  target_transform=None)
+
+        train_loader= get_loader(train_data_set, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+        trainval_loader= get_loader(trainval_data_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+        val_loader= get_loader(val_data_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+        
+        epochs = tqdm(range(args.epochs), ncols=80)
+
+        for epoch in epochs:
+            epoch_total_loss = 0.0
+            _train_loader = tqdm(train_loader, ncols=80)
+
+            if (epoch+1) % args.decay_every == 0:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] *= args.decay_value
+
+            for img, mask in _train_loader:
+                images = to_var(img, volatile=False)
+                masks = to_var(mask, volatile=False)
+
+                optimizer.zero_grad()
                 
-                # file_list_path, img_root, mask_root, pair_transform=None, input_transform=None, target_transform=None
-                train_data_set = PODataLoader(VOC_list=args.voc_train_image_list,
-                                          SBD_list=args.sbd_train_image_list,
-                                          voc_img_root=args.voc_image_dir,
-                                          sbd_img_root=args.sbd_image_dir,
-                                          voc_mask_root=args.voc_mask_dir,
-                                          sbd_mask_root=args.sbd_mask_dir,
-                                          pair_transform=pair_transform,
-                                          input_transform=input_transform,
-                                          target_transform=None)
+                outputs = model(images)
 
-                trainval_data_set = PODataLoader(VOC_list=args.voc_trainval_image_list,
-                                          SBD_list=args.sbd_val_image_list,
-                                          voc_img_root=args.voc_image_dir,
-                                          sbd_img_root=args.sbd_image_dir,
-                                          voc_mask_root=args.voc_mask_dir,
-                                          sbd_mask_root=args.sbd_mask_dir,
-                                          pair_transform=pair_transform,
-                                          input_transform=input_transform,
-                                          target_transform=None)
+                outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
 
-                val_data_set = VOC12Seg(file_list_path=args.voc_val_image_list,
-                                          img_root=args.voc_image_dir,
-                                          mask_root=args.voc_mask_dir,
-                                          pair_transform=val_pair_transform,
-                                          input_transform=input_transform,
-                                          target_transform=None)
-
-                train_loader= get_loader(train_data_set, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-                trainval_loader= get_loader(trainval_data_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
-                val_loader= get_loader(val_data_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
-
-                # loss
-                #m = nn.LogSoftmax()
-                #criterion = nn.NLLLoss2d()
+                batch_loss = model.loss(outputs, masks)
                 
-                epochs = tqdm(range(args.epochs), ncols=80)
-
-                for epoch in epochs:
-                        epoch_total_loss = 0.0
-                        _train_loader = tqdm(train_loader, ncols=80)
-
-                        if (epoch+1) % args.decay_every == 0:
-                                for param_group in optimizer.param_groups:
-                                        param_group['lr'] *= 0.1
-
-                        for img, mask in _train_loader:
-                                images = to_var(img, volatile=False)
-                                masks = to_var(mask, volatile=False)
-
-                                optimizer.zero_grad()
-                                
-                                outputs = model(images)
-
-                                outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
-
-                                batch_loss = model.loss(outputs, masks)
-                                
-                                epoch_total_loss += batch_loss.data[0]
-                                
-                                batch_loss.backward()
-                                optimizer.step()
-                                
-                                _train_loader.set_description("train batch loss: {:5.5f}".format(batch_loss.data[0]))
-
-                        epochs.set_description("[#{}]train epoch loss: {:5.5f}".format(epoch+1, epoch_total_loss))
-
-                        # check train validation
-                        if (epoch+1) % args.trainval_every == 0:
-                                model.eval()
-                                _trainval_loader = tqdm(train_loader, ncols=80)
-                                _trainval_loader.set_description("train val")
-                                trainval_total_loss = 0.0
-                                pix_acc = 0.0
-                                batch_count = 0
-                                for img, mask in _trainval_loader:
-                                        images = to_var(img, volatile=False)
-                                        #masks = to_var(mask, volatile=False)
-
-                                        outputs = model.inference(images)
-                                        outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear').squeeze(1)
-                                        
-                                        pix_acc += metric.pix_acc(outputs.cpu().data, mask)
-                                        
-                                        batch_count += 1
-
-                                tqdm.write("[#{}] trainval total: mean pix acc. {:5.5f}".format(epoch+1, pix_acc/batch_count))
-                                model.train()
-                        # save model
-                        if (epoch+1) % args.save_every == 1:
-                                state = {'epoch': epoch + 1,
-                                         'optimizer_state_dict' : optimizer.state_dict()}
-                                model.save(add_state=state, file_name=os.path.join(args.save_dir,'model_param_e{}.pkl'.format(epoch+1)))
-                                tqdm.write("model saved.")
-
-                model.save(add_state={'optimizer_state_dict' : optimizer.state_dict()}, file_name=os.path.join(args.save_dir,'model_param_fin_{}.pkl'.format(epoch+1, datetime.now().strftime("%Y%m%d_%H-%M-%S"))))
+                epoch_total_loss += batch_loss.data[0]
                 
-                _val_loader = tqdm(train_loader, ncols=80)
-                _val_loader.set_description("val")
-                val_total_loss = 0.0
+                batch_loss.backward()
+                optimizer.step()
+                
+                _train_loader.set_description("train batch loss: {:5.5f}".format(batch_loss.data[0]))
+
+            epochs.set_description("[#{}]train epoch loss: {:5.5f}".format(epoch+1, epoch_total_loss))
+
+            # check train validation
+            if (epoch+1) % args.trainval_every == 0:
+                model.eval()
+                _trainval_loader = tqdm(train_loader, ncols=80)
+                _trainval_loader.set_description("train val")
+                trainval_total_loss = 0.0
                 pix_acc = 0.0
                 batch_count = 0
+                for img, mask in _trainval_loader:
+                    images = to_var(img, volatile=False)
+                    #masks = to_var(mask, volatile=False)
+
+                    outputs = model.inference(images)
+                    outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear').squeeze(1)
+                    
+                    pix_acc += metric.pix_acc(outputs.cpu().data, mask)
+                    
+                    batch_count += 1
+
+                tqdm.write("[#{}] trainval total: mean pix acc. {:5.5f}".format(epoch+1, pix_acc/batch_count))
+                model.train()
+            # save model
+            if (epoch+1) % args.save_every == 1:
+                state = {'epoch': epoch + 1,
+                         'optimizer_state_dict' : optimizer.state_dict()}
+                model.save(add_state=state, file_name=os.path.join(args.save_dir,'model_param_e{}.pkl'.format(epoch+1)))
+                tqdm.write("model saved.")
+
+        model.save(add_state={'optimizer_state_dict' : optimizer.state_dict()}, file_name=os.path.join(args.save_dir,'model_param_fin_{}.pkl'.format(epoch+1, datetime.now().strftime("%Y%m%d_%H-%M-%S"))))
+        
+        _val_loader = tqdm(train_loader, ncols=80)
+        _val_loader.set_description("val")
+        val_total_loss = 0.0
+        pix_acc = 0.0
+        batch_count = 0
+        
+        model.eval()
+
+        for img, masks in _val_loader:
+            images = to_var(img, volatile=False)
+
+            outputs = model.inference(images)
+            outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear').squeeze(1)
+            pix_acc += metric.pix_acc(outputs.cpu().data, masks)
+            
+            batch_count += 1
                 
-                model.eval()
-
-                for img, masks in _val_loader:
-                        images = to_var(img, volatile=False)
-
-                        outputs = model.inference(images)
-                        outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear').squeeze(1)
-                        pix_acc += metric.pix_acc(outputs.cpu().data, masks)
-                        
-                        batch_count += 1
-                        
-                tqdm.write("val total : mean pix acc. {:5.5f}".format(pix_acc/batch_count))
+        tqdm.write("val total : mean pix acc. {:5.5f}".format(pix_acc/batch_count))
 
 if __name__ == '__main__':
-        parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
 
-        # settings
-        parser.add_argument('--voc_image_dir', type=str, default='./dataset/voc/img', help='directory for train images')
-        parser.add_argument('--voc_mask_dir', type=str, default='./dataset/voc/mask', help='directory for train mask images')
-        parser.add_argument('--sbd_image_dir', type=str, default='./dataset/sbd/img', help='directory for train images')
-        parser.add_argument('--sbd_mask_dir', type=str, default='./dataset/sbd/mask', help='directory for train mask images')
+    # settings
+    parser.add_argument('--voc_image_dir', type=str, default='./dataset/voc/img', help='directory for train images')
+    parser.add_argument('--voc_mask_dir', type=str, default='./dataset/voc/mask', help='directory for train mask images')
+    parser.add_argument('--sbd_image_dir', type=str, default='./dataset/sbd/img', help='directory for train images')
+    parser.add_argument('--sbd_mask_dir', type=str, default='./dataset/sbd/mask', help='directory for train mask images')
 
-        parser.add_argument('--voc_train_image_list', type=str, default='./dataset/voc/train.txt', help='directory of image list of train')
-        parser.add_argument('--voc_trainval_image_list', type=str, default='./dataset/voc/trainval.txt', help='directory of image list of trainval')
-        parser.add_argument('--voc_val_image_list', type=str, default='./dataset/voc/val.txt', help='directory of image list of validation')
-        parser.add_argument('--sbd_train_image_list', type=str, default='./dataset/sbd/train.txt', help='directory of image list of train')
-        parser.add_argument('--sbd_val_image_list', type=str, default='./dataset/sbd/val.txt', help='directory of image list of trainval')
+    parser.add_argument('--voc_train_image_list', type=str, default='./dataset/voc/train.txt', help='directory of image list of train')
+    parser.add_argument('--voc_trainval_image_list', type=str, default='./dataset/voc/trainval.txt', help='directory of image list of trainval')
+    parser.add_argument('--voc_val_image_list', type=str, default='./dataset/voc/val.txt', help='directory of image list of validation')
+    parser.add_argument('--sbd_train_image_list', type=str, default='./dataset/sbd/train.txt', help='directory of image list of train')
+    parser.add_argument('--sbd_val_image_list', type=str, default='./dataset/sbd/val.txt', help='directory of image list of val')
 
-        parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing')
-        parser.add_argument('--save_dir', type=str, default="./log/", help='size for image after processing')
-        parser.add_argument('--save_every', type=int, default=10, help='size for image after processing')
-        parser.add_argument('--epochs', type=int, default=200)
-        parser.add_argument('--batch_size', type=int, default=10) # paper default
-        parser.add_argument('--batch_batch_size', type=int, default=64)
-        parser.add_argument('--num_workers', type=int, default=8)
-        parser.add_argument('--learning_rate', type=float, default=0.001)
-        parser.add_argument('--decay_every', type=int, default=50)
-        parser.add_argument('--gpu_device_num', type=int, default=0)
-        parser.add_argument('--trainval_every', type=int, default=10)
-        
-        parser.add_argument('--trained_path', type=str, default="vgg16-397923af.pth", help="pytorch official pretrained data is like vgg16-397923af.pth")
-        parser.add_argument('--setting_file', type=str, default=None, help="use arguments from setting file")
-        
-        # flags
-        parser.add_argument('-batch_batch', action="store_true", default=False, help='calc in batch in batch')
-        parser.add_argument('-use_tensorboard', action="store_true", default=False, help='calc in batch in batch')
-        
-        args = parser.parse_args()
-        
-        train(args)
+    # detail settings
+    parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing') # paper default
+    parser.add_argument('--save_dir', type=str, default="./log/", help='dir of saving log and model parameters and so on.')
+    parser.add_argument('--save_every', type=int, default=10, help='count of saving model')
+    parser.add_argument('--epochs', type=int, default=200, help="train epoch num.")
+    parser.add_argument('--batch_size', type=int, default=10, help="mini batch size") # paper default
+    parser.add_argument('--batch_batch_size', type=int, default=64, help="the size of 'mini batch' of 'mini batch'") # not ready yet
+    parser.add_argument('--num_workers', type=int, default=8, help="worker num. of data loader")
+    parser.add_argument('--learning_rate', type=float, default=0.001, help="initial value of learning rate")
+    parser.add_argument('--decay_value', type=float, default=0.1, help="decay learning rate with count of args:decay_every in this factor.")
+    parser.add_argument('--decay_every', type=int, default=50, help="count of decaying learning rate")
+    parser.add_argument('--gpu_device_num', type=int, default=0, help="device number of gpu")
+    parser.add_argument('--trainval_every', type=int, default=10, help="evaluate trainval data acc.")
+    
+    parser.add_argument('--trained_path', type=str, default="vgg16-397923af.pth", help="restore parameter or use pretrained model, pytorch official pretrained data is like vgg16-397923af.pth")
+    parser.add_argument('--setting_file', type=str, default=None, help="use arguments from setting file") # not ready yet
+    
+    # flags
+    parser.add_argument('-batch_batch', action="store_true", default=False, help='calc in batch in batch')
+    parser.add_argument('-use_tensorboard', action="store_true", default=False, help='use TensorBoard') # not ready yet
+    
+    args = parser.parse_args()
+    
+    train(args)
         
