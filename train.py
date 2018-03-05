@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 #import torchvision.datasets as dsets
+import torchvision
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 
@@ -134,9 +135,10 @@ def train(args):
                                 for img, mask in _trainval_loader:
                                         images = to_var(img, volatile=False)
                                         #masks = to_var(mask, volatile=False)
-                                        
+
                                         outputs = model.inference(images)
-                                        outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
+                                        outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear').squeeze(1)
+                                        
                                         pix_acc += metric.pix_acc(outputs.cpu().data, mask)
                                         
                                         batch_count += 1
@@ -164,7 +166,7 @@ def train(args):
                         images = to_var(img, volatile=False)
 
                         outputs = model.inference(images)
-                        outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
+                        outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear').squeeze(1)
                         pix_acc += metric.pix_acc(outputs.cpu().data, masks)
                         
                         batch_count += 1
@@ -190,7 +192,7 @@ if __name__ == '__main__':
         parser.add_argument('--save_dir', type=str, default="./log/", help='size for image after processing')
         parser.add_argument('--save_every', type=int, default=10, help='size for image after processing')
         parser.add_argument('--epochs', type=int, default=200)
-        parser.add_argument('--batch_size', type=int, default=8)
+        parser.add_argument('--batch_size', type=int, default=10) # paper default
         parser.add_argument('--batch_batch_size', type=int, default=64)
         parser.add_argument('--num_workers', type=int, default=8)
         parser.add_argument('--learning_rate', type=float, default=0.001)

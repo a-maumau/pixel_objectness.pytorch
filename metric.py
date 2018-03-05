@@ -11,25 +11,23 @@ def pix_acc(pred_labels, gt_labels):
         pred_labels and gt_labels should be batch x w x h
     """
 
-    w = pred_labels.size()[2]
-    h = pred_labels.size()[3]
+    w = pred_labels.size()[1]
+    h = pred_labels.size()[2]
     pix = w*h
     batch_size = pred_labels.size()[0]
 
-    #match_labels = (pred_labels.type(torch.LongTensor).squeeze(1)-gt_labels) == 0
-
-    #print(match_labels.size())
+    #match_labels = pred_labels.type(torch.LongTensor)==gt_labels
 
     # calc sum, align in straight
     #match_labels = match_labels.view(batch_size,pix)
-    #match_labels_acc = match_labels.sum(1).type(torch.FloatTensor)/pix
+    #match_labels_acc = torch.sum(match_labels,dim=1).type(torch.FloatTensor)/pix
 
     #mean_acc = torch.sum(match_labels_acc)/batch_size
 
     #return mean_acc
     
     # same thing.
-    return torch.sum(((pred_labels.type(torch.LongTensor).squeeze(1)-gt_labels) == 0).view(batch_size,pix).sum(1).type(torch.FloatTensor)/pix)/batch_size
+    return torch.sum(torch.sum((pred_labels.type(torch.LongTensor)==gt_labels).view(batch_size,pix).type(torch.FloatTensor),dim=1)/pix)/batch_size
 
 def mean_pix_acc(pred_labels, gt_labels, class_num):
     """

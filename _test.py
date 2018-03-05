@@ -116,12 +116,15 @@ def train(args):
         for img, mask in _trainval_loader:
             images = to_var(img, volatile=False)
             #masks = to_var(mask, volatile=False)
-                
+
             #outputs = model.inference(images)
             #outputs = F.upsample(outputs, size=[args.crop_size, args.crop_size], mode='bilinear')
-            pix_acc += metric.pix_acc(mask, mask)
-                
+            acc_tmp = metric.pix_acc(mask, mask)
+            pix_acc += acc_tmp
+            
             batch_count += 1
+            
+            _trainval_loader.set_description("trainval mean pix acc: {:5.5f}".format(acc_tmp))
 
         tqdm.write("trainval total: mean pix acc. {:5.5f}".format(pix_acc/batch_count))
         model.train()

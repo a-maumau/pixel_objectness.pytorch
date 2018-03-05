@@ -194,7 +194,7 @@ class POVGG16(nn.Module):
         return x
 
     def loss(self, inputs, targets):
-        return self.nll_loss(F.log_softmax(inputs), targets)
+        return self.nll_loss(F.log_softmax(inputs, dim=1), targets)
 
     def inference(self, inputs):
         #pred = self.features(inputs)
@@ -203,7 +203,7 @@ class POVGG16(nn.Module):
         #return pred
         
         # same thing
-        return torch.max(torch.nn.functional.softmax(self.features(inputs)), dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
+        return torch.max(torch.nn.functional.softmax(self.features(inputs), dim=1), dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
 
     def save(self, add_state={}, file_name="model_param.pth"):
         assert type(add_state) is dict, "arg1:add_state must be dict"
