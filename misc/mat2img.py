@@ -49,7 +49,7 @@ def main(args):
         image_list = read_from_txt(args.image_list)
 
     if args.add_prefix:
-        prefix = args,prefix
+        prefix = args.prefix
     else:
         prefix = ""
 
