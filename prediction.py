@@ -26,9 +26,10 @@ def prediction(args):
         if args.trained_path is not None:
             try:
                 chkp = torch.load(args.trained_path)
+                print(chkp.keys())
                 model_dict = model.state_dict()
                 
-                pretrained_dict = {k: v for k, v in chkp.items() if k in model_dict}
+                pretrained_dict = {k: v for k, v in chkp["state_dict"].items() if k in model_dict}
                 #print(pretrained_dict.keys())
                 model_dict.update(pretrained_dict)
                 model.load_state_dict(model_dict)
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('--image_dir', type=str, default='./dataset/test', help='directory for test images')
 
     # detail settings
-    parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing') # paper default
+    parser.add_argument('--resize_size', type=int, default=321, help='size for image after processing') # paper default
     parser.add_argument('--save_dir', type=str, default="./log/predicted", help='dir of saving log and model parameters and so on.')
     parser.add_argument('--batch_size', type=int, default=10, help="mini batch size")
     parser.add_argument('--num_workers', type=int, default=8, help="worker num. of data loader")
