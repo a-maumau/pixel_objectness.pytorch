@@ -56,7 +56,7 @@ def seg_metric(pred_labels, gt_labels, class_num):
     mean_cls_acc = 0
 
     for cls in range(class_num):
-        # extract the indices of the labels(number) of cls
+        # extract the indice of the labels(number) of cls
         mask = gt_labels == cls
 
         """
