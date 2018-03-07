@@ -4,10 +4,10 @@ To run this program, you need install at least
 - Numpy (might be automatically install with Pytorch)
 - tqdm (for progress bar)
   
-Other things might be needed, install the modules suit you environment.
+Other things might be require. Install the modules suit you environment.
 
-# Paper
-[site](http://vision.cs.utexas.edu/projects/pixelobjectness/)  
+# Original Paper
+[Pixel Objectness](http://vision.cs.utexas.edu/projects/pixelobjectness/)  
   
 # Dataset
 You need to prepare your dataset.  
@@ -32,7 +32,7 @@ dataset/
 	     |- val.txt
 ```
 SBD dataset and VOC dataset has same images, so you can marge the directories if you want.  
-train.txt and so on things are files that are written which image to use. These are come with the dataset  
+train.txt and so on things are files that are written which image to use. These come with the dataset.  
   
 ## Binarize class
 Before staring a training, we need to binarize tha class labels to foreground and background.  
