@@ -4,7 +4,7 @@ To run this program, you need install at least
 - Numpy (might be automatically install with Pytorch)
 - tqdm (for progress bar)
   
-Other things might be needed, install the modules suits you environment.
+Other things might be needed, install the modules suit you environment.
 
 # Paper
 [site](http://vision.cs.utexas.edu/projects/pixelobjectness/)  
