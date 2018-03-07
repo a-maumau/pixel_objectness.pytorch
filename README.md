@@ -1,3 +1,11 @@
+# Requirements 
+To run this program, you need install at least
+- Pytorch
+- Numpy (might be automatically install with Pytorch)
+- tqdm (for progress bar)
+  
+Other things might be needed, install the modules suits you environment.
+
 # Paper
 [site](http://vision.cs.utexas.edu/projects/pixelobjectness/)  
   
