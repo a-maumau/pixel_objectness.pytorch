@@ -32,8 +32,14 @@ dataset/
 	     |- val.txt
 ```
 SBD dataset and VOC dataset has same images, so you can marge the directories if you want.  
-train.txt and so on things are files that are written which image to use. These are come with the dataset
+train.txt and so on things are files that are written which image to use. These are come with the dataset  
   
+## Binarize class
+Before staring training we need binarize tha class labels to foreground and background.  
+I made a script for doing this job. See the misc directory.  
+- convert2binary.py is for binalizing the class labels which convert 0 to background and 1~ to foreground.
+- mat2omg.py is for convert mat files to image files, default is .png format.
+
 # Train
 ```
 python train.py
