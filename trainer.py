@@ -66,10 +66,8 @@ class Trainer_PixelObjectness_SBDdataset(Template_Trainer):
             val_head.append("mean_IoU_class_{}".format(i))
         self.tlog = self.get_train_logger({"train":["epoch", "batch_mean_total_loss"], "val":val_head},
                                           save_dir=self.args.save_dir, save_name=self.args.save_name, arguments=self.get_argparse_arguments(self.args),
-                                          use_http_server=self.args.use_http_server, use_msg_server=self.args.use_msg_server, notificate=True,
+                                          use_http_server=self.args.use_http_server, use_msg_server=self.args.use_msg_server, notificate=False,
                                           visualize_fetch_stride=self.args.viz_fetch_stride, http_port=self.args.http_server_port, msg_port=self.args.msg_server_port)        
-        self.tlog.set_notificator(args.notify_type)
-        self.tlog.notify("@a_maumau_ {}: initializing".format(self.args.save_name))
 
         # paths
         self.save_dir = self.tlog.log_save_path
@@ -228,7 +226,6 @@ class Trainer_PixelObjectness_SBDdataset(Template_Trainer):
             self.model.train()
 
     def train(self):
-        self.tlog.notify("@a_maumau_ {}: start training".format(self.args.save_name))
 
         if self.args.quiet:
             epochs = range(1, self.args.epochs+1)
@@ -304,7 +301,6 @@ class Trainer_PixelObjectness_SBDdataset(Template_Trainer):
                         file_name=os.path.join(self.model_param_dir, 'model_param_fin_{}.pth'.format(datetime.now().strftime("%Y%m%d_%H-%M-%S"))))
 
         print("data is saved at {}".format(self.save_dir))
-        self.tlog.notify("@a_maumau_ {}: train finished.".format(self.args.save_name))
 
     def test_loader(self):
         from matplotlib import pylab as plt
