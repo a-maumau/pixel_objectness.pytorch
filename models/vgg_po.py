@@ -1,8 +1,8 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-
 """
 originate from
 https://github.com/pytorch/vision/blob/master/torchvision/models/vgg.py
@@ -20,6 +20,7 @@ model_urls = {
 }
 """
 
+"""
 # base net
 class VGG(nn.Module):
     def __init__(self, features, num_classes=1000, init_weights=True):
@@ -85,6 +86,7 @@ def vgg16(pretrained=False, **kwargs):
         model.load_state_dict(model_zoo.load_url(model_urls['vgg16']))
     return model
 """
+"""
 which will make
 
 nn.Conv2d(3, 64, stride=1, kernel_size=3, padding=1),
@@ -125,7 +127,8 @@ nn.MaxPool2d(kernel_size=2, stride=2), #diff
 """
 
 # model of Pixel Objectness which is based on VGG Net
-class POVGG16(nn.Module):
+# this is a model which was written in the paper
+class VGG16_PixelObjectness(nn.Module):
     inplace_flag = False
     def __init__(self, input_channel=3, num_class=2, init_weights=True):
         super(POVGG16, self).__init__()
@@ -133,7 +136,7 @@ class POVGG16(nn.Module):
         self.input_channel = input_channel
         self.num_class = num_class
         
-        self.nll_loss = nn.NLLLoss2d()
+        self.loss_function = nn.NLLLoss()
 
         # I hate writing in for-loops.
         # Name must be "features" because in the pretrained data's dict is named "features"
@@ -193,22 +196,67 @@ class POVGG16(nn.Module):
         return x
 
     def loss(self, inputs, targets):
-        return self.nll_loss(F.log_softmax(inputs, dim=1), targets)
+        return self.loss_function(F.log_softmax(inputs, dim=1), targets)
 
     def inference(self, inputs):
-        #pred = self.features(inputs)
-        #pred = torch.nn.functional.softmax(pred)
-        #pred = torch.max(pred, dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
-        #return pred
-        
         # same thing
-        return torch.max(torch.nn.functional.softmax(self.features(inputs), dim=1), dim=1)[1].unsqueeze(1).type(torch.FloatTensor)
+        return torch.max(torch.nn.functional.softmax(self.features(inputs), dim=1), dim=1)[1].unsqueeze(1).type(torch.float)
+
+    # for loading ImageNet pretrained model parameter from pytorch official.
+    def load_imagenet_param(self, parameter_path, print_debug=False):
+        if parameter_path is not None:
+            try:
+                print("loading pretrained parameter... ", end="")
+                
+                chkp = torch.load(os.path.abspath(parameter_path))
+                _model_dict = self.features.state_dict()
+
+                # rename the name, name , original names is like "layer3.0.conv1.weight"
+                pretrained_dict = {k: v for k, v in chkp.items() if k in _model_dict}
+
+                if print_debug:
+                    print("")
+                    print(pretrained_dict.keys())
+
+                _model_dict.update(pretrained_dict)
+                self.features.load_state_dict(_model_dict)
+                
+                print("done.")
+
+            except Exception as e:
+                print("")
+                import traceback
+                traceback.print_exc()
+                print(e)
+                print("cannot load pretrained data.")
+
+    # for loading trained parameter of this model.
+    def load_trained_param(self, parameter_path, print_debug=False):
+        if parameter_path is not None:
+            try:
+                print("loading pretrained parameter... ", end="")
+                
+                chkp = torch.load(os.path.abspath(parameter_path), map_location=lambda storage, loc: storage)
+
+                if print_debug:
+                    print(chkp.keys())
+
+                self.load_state_dict(chkp["state_dict"])
+                
+                print("done.")
+
+            except Exception as e:
+                print("")
+                import traceback
+                traceback.print_exc()
+                print(e)
+                print("cannot load pretrained data.")
 
     def save(self, add_state={}, file_name="model_param.pth"):
-        assert type(add_state) is dict, "arg1:add_state must be dict"
+        #assert type(add_state) is dict, "arg1:add_state must be dict"
         
         if "state_dict" in add_state:
-            print("the value of key:'state_dict' will be over write with model's state_dict parameters")
+            print("the value of key:'state_dict' will be over written by model's state_dict parameters")
 
         _state = add_state
         _state["state_dict"] = self.state_dict()
