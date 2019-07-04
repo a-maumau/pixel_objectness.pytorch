@@ -48,7 +48,8 @@ class DatasetParser(object):
             inplace
         """
 
-        return mask[mask > 0] = 1
+        mask[mask > 0] = 1
+        return mask
 
     def read_mat(self, mat_filename, key='GTcls'):
             mat = scipy.io.loadmat(mat_filename, mat_dtype=True, squeeze_me=True, struct_as_record=False)
