@@ -1,23 +1,29 @@
 import argparse
 
-from trainer import Trainer_PixelObjectness_SBDdataset as Trainer
+import torch
+
+from trainer import Trainer_PixelObjectness as Trainer
+from templates import gen_policy_args
 from learning_rate_policy import *
 
 def train(args):
     if args.model == "vgg":
         from models.vgg_po import VGG16_PixelObjectness as Model
-        model = Model(num_classes=args.class_num, model_type="101", imagenet_pretrained_path=args.pretrained_path)
-
-    elif args.model == "resnet":
-        from models.resnet_po import resnet_po as Model
         model = Model(input_channel=3, num_class=args.class_num)
         model.load_imagenet_param(args.pretrained_path)
 
+    # not working
+    elif args.model == "resnet":
+        from models.resnet_po import resnet_po as Model
+        model = Model(num_classes=args.class_num, model_type="101", imagenet_pretrained_path=args.pretrained_path)
+      
     else:
         raise("invalid model name.")
 
-    # original is step policy
-    trainer = Trainer(args, model, PolynomialPolicy)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=1e-5)
+    lr_policy = StepBasedPolicy(**gen_policy_args(optimizer=optimizer, args=args))
+    
+    trainer = Trainer(args, model, optimizer, lr_policy)
 
     if args.test_loader:
         trainer.test_loader()
@@ -28,21 +34,23 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # settings
-    parser.add_argument('--train_dataset', type=str, default='dataset/SBDdataset/benchmark_RELEASE/dataset', help='path of pickled train data')
-    parser.add_argument('--val_dataset', type=str, default='dataset/SBDdataset/benchmark_RELEASE/dataset', help='pickle ')
+    parser.add_argument('--train_dataset', type=str, default='./train.pkl', help='path of pickled train data')
+    parser.add_argument('--val_dataset', type=str, default='./val.pkl', help='path of pickled train data ')
 
-    parser.add_argument('--save_name', type=str, default="po_log", help='dir of saving log and model parameters and so on')
+    parser.add_argument('--save_name', type=str, default="po_log", help='name of log')
     parser.add_argument('--save_dir', type=str, default="./log/", help='dir of saving log and model parameters and so on')
 
     # model name
-    parser.add_argument('--model', type=str, default="vgg", choice=["vgg", "resnet"], help='')
+    #parser.add_argument('--model', type=str, default="vgg", choices=["vgg", "resnet"], help='')
+    # I didn't finish it, so only vgg
+    parser.add_argument('--model', type=str, default="vgg", choices=["vgg"], help='')
 
     # model setting
     parser.add_argument('--class_num', type=int, default=2, help="output map channel")
 
     # data augments settings
-    parser.add_argument('--crop_size', type=int, default=512, help='size for image after processing')
-    parser.add_argument('--resize_size', type=int, default=600, help='size for image after processing')
+    parser.add_argument('--crop_size', type=int, default=321, help='size for image after processing')
+    parser.add_argument('--resize_size', type=int, default=360, help='size for image after processing')
     #parser.add_argument('--resize_scale_min', type=float, default=0.8, help='')
     #parser.add_argument('--resize_scale_max', type=float, default=1.2, help='')
 
@@ -54,11 +62,11 @@ if __name__ == '__main__':
     parser.add_argument('--blur_prob', type=float, default=0.8, help='')
 
     # train, data setting
-    parser.add_argument('--epochs', type=int, default=130, help="how many epochs to train")
-    parser.add_argument('--max_iter', type=int, default=200000, help="train iter max num.")
+    parser.add_argument('--epochs', type=int, default=16, help="how many epochs to train. if your are using iter wise training this should be set enough number")
+    parser.add_argument('--max_iter', type=int, default=12500, help="train iter max num.")
     
-    parser.add_argument('--batch_size', type=int, default=4, help="mini batch size")
-    parser.add_argument('--num_workers', type=int, default=4, help="worker number of data loader")
+    parser.add_argument('--batch_size', type=int, default=10, help="mini batch size, original is 10")
+    parser.add_argument('--num_workers', type=int, default=8, help="worker number of data loader")
     
     parser.add_argument('--learning_rate', type=float, default=0.001, help="initial value of learning rate")
     parser.add_argument('--min_learning_rate', type=float, default=0.001, help="initial value of learning rate")
@@ -67,9 +75,10 @@ if __name__ == '__main__':
     parser.add_argument('--lr_hp_k', type=float, default=1.0, help="")
 
     # nums
-    parser.add_argument('--decay_every', type=int, default=30, help="count of decaying learning rate")
-    parser.add_argument('--save_every', type=int, default=10, help='count of saving model')
-    parser.add_argument('--trainval_every', type=int, default=5, help="evaluate trainval data acc.")
+    parser.add_argument('--decay_every', type=int, default=2500, help="count of decaying learning rate")
+    parser.add_argument('--save_every', type=int, default=2500, help='count of saving model')
+    parser.add_argument('--trainval_every', type=int, default=2500, help="evaluate trainval data acc.")
+    parser.add_argument('--log_every', type=int, default=1250, help="count of showing log")
 
     # gpu number
     parser.add_argument('--gpu_device_num', type=int, default=0, help="device number of gpu")
@@ -100,7 +109,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-test_mode', action="store_true", default=False, help='')
     parser.add_argument('-test_loader', action="store_true", default=False, help='')
-    parser.add_argument('-force_lr_policy_iter_wise', action="store_true", default=False, help='')
+    # this option should be manually set, but it is bother us. so I set to True which make alway iterwise lr policy
+    parser.add_argument('-force_lr_policy_iter_wise', action="store_true", default=True, help='')
     parser.add_argument('-force_lr_policy_epoch_wise', action="store_true", default=False, help='')
 
     args = parser.parse_args()

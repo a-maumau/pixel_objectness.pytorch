@@ -6,7 +6,7 @@ import torch
 import torchvision.transforms as transforms
 
 import mau_transforms
-from dataset import SegmentationDataSet
+from dataset import SegmentationDataSet, PredictionLoader
 
 # data loader for dataset
 def get_loader(dataset, batch_size=64, shuffle=True, num_workers=8):
@@ -22,21 +22,19 @@ def get_train_loader(args, normalize_param=([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])):
     input_transform_content = []
     target_transform_content = None
 
-    if args.random_rotate:
-        pair_transform_content.append(mau_transforms.PairRandomRotate(args.rotate_deg))
-
+    # in the paper,it only using horizontal flip
+    pair_transform_content.append(mau_transforms.PairRandomRotate(args.rotate_deg))
     pair_transform_content.append(mau_transforms.PairResize(args.resize_size))
     pair_transform_content.append(mau_transforms.PairRandomCrop(args.crop_size))
 
     # input transforms #####################################################################
-    if args.gaussian_blur:
-        input_transform_content.append(mau_transforms.RanmdomGaussianBlur(radius=args.blur_radius, prob=args.blur_prob, scale=(args.blur_scale_min, args.blur_scale_max)))
+    #input_transform_content.append(mau_transforms.RanmdomGaussianBlur(radius=args.blur_radius, prob=args.blur_prob, scale=(args.blur_scale_min, args.blur_scale_max)))
 
     #transforms.Normalize(mean=(0.452, 0.431, 0.399),std=(0.277, 0.273, 0.285))
     input_transform_content.append(transforms.ToTensor())
 
-    if args.normalize:
-        input_transform_content.append(transforms.Normalize(*normalize_param))
+    #if args.normalize:
+    input_transform_content.append(transforms.Normalize(*normalize_param))
 
 
     pair_transform = mau_transforms.PairCompose(pair_transform_content)
@@ -49,8 +47,8 @@ def get_train_loader(args, normalize_param=([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])):
                     "target_transform":target_transform,
                     "return_original":False,
                 }
-    
-    return get_loader(data_set=SegmentationDataSet(**dataset_args),
+
+    return get_loader(SegmentationDataSet(**dataset_args),
                       batch_size=args.batch_size,
                       shuffle=True,
                       num_workers=args.num_workers
@@ -71,7 +69,25 @@ def get_val_loader(args, normalize_param=([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])):
                         "return_original":True
                     }
 
-    return get_loader(data_set=SegmentationDataSet(**dataset_val_args),
+    return get_loader(SegmentationDataSet(**dataset_val_args),
+                      batch_size=args.batch_size,
+                      shuffle=False,
+                      num_workers=args.num_workers
+                    )
+
+def get_pred_loader(args, normalize_param=([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])):
+    # if you want predict in original size, you should set batch_size to 1 and delete the crop code
+    input_transform = transforms.Compose([transforms.Scale(args.resize_size),
+                                          transforms.CenterCrop(args.resize_size),
+                                          transforms.ToTensor(),
+                                          transforms.Normalize(*normalize_param)])
+
+    dataset_args = {
+                        "img_root": args.image_dir,
+                        "input_transform":input_transform,
+                    }
+
+    return get_loader(PredictionLoader(**dataset_args),
                       batch_size=args.batch_size,
                       shuffle=False,
                       num_workers=args.num_workers

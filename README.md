@@ -15,32 +15,21 @@ Download the dataset from
 - [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/)
 - [SBD dataset](http://home.bharathh.info/pubs/codes/SBD/download.html)  
   
-The default dataset's directory configuration is
+# Preprocess
+First, you need to preprocess the dataset to make binalized mask image.
 ```
-dataset/
-       |- sbd/
-       |     |- img/      #images
-       |     |- mask/     #labels
-       |     |- train.txt
-       |     |- val.txt
-       |
-       |- voc/
-             |- img/      #images
-             |- mask/     #labels
-	     |- train.txt
-	     |- trainval.txt
-	     |- val.txt
+python misc/create_dataset.py --voc_root PATH_TO/VOCdevkit/ --sbd_root PATH_TO/SBDdataset/benchmark_RELEASE
 ```
-SBD dataset and VOC dataset has same images, so you can marge the directories if you want.  
-train.txt and so on things are files that are written which image to use. These come with the dataset.  
-  
-## Binarize class
-Before staring a training, we need to binarize tha class labels to foreground and background.  
-I made a script for doing this job. See the misc directory.  
-- convert2binary.py is for binalizing class labels which convert 0 to background and 1~ to foreground.
-- mat2omg.py is for converting mat files to image files, default is .png format.
+This will do the all things and, will make train.pkl and val.pkl which are pickled dataset.
 
 # Train
+First, you need to download the ImageNet pretrained parameter from pytorch official.
+```
+wget https://download.pytorch.org/models/vgg16-397923af.pth
+```
+  
+then  
+  
 ```
 python train.py
 ```
@@ -48,5 +37,5 @@ There are some options you can change. See the code or use --help for more detat
 
 # Prediction
 ```
-python prediction.py
+python prediction.py --image_dir folder_that_contains_images/
 ```

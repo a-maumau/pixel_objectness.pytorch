@@ -1,6 +1,9 @@
 """
-    for VOC and SBD dataset
+    for VOC and SBD dataset.
+    it is ambiguous how they consist the datset.
+    the number of images does not match with the paper.
 """
+
 import os
 import argparse
 
@@ -15,7 +18,13 @@ class DatasetParser(object):
     mask_extension = '.png'
     mat_file_extension = '.mat'
 
-    def __init__(self, VOC2012dataset_root="./VOCdevkit", SBDdataset_root="./benchmark_RELEASE"):
+    def __init__(self, VOC2012dataset_root="./VOCdevkit", SBDdataset_root="./benchmark_RELEASE", skip_sbd_image_in_voc=True):
+        """
+            args:
+                skip_sbd_image_in_voc
+                    if true, among the preprocessing, it will skip the same image.
+                    it seems some of images in SBD dataset contained also in VOC2012.                    
+        """
         self.voc_path = os.path.join(VOC2012dataset_root, "VOC2012")
         self.sbd_path = os.path.join(SBDdataset_root, "dataset")
 
@@ -25,15 +34,28 @@ class DatasetParser(object):
         self.voc_train_names = []
         self.voc_val_names = []
 
+        self.skip_sbd_image_in_voc = skip_sbd_image_in_voc
+
     def create_dataset(self):
         # VOC
-        self.__load_voc_data()
+        try:
+            self.__load_voc_data()
+            print("train: {} data".format(len(self.train_data)))
+        except Exception as e:
+            import traceback
+            print("failed on making VOC dataset.")
+            print(e)
+            traceback.format_exc()
 
         # SBD
-        self.__load_sbd_data()
-
-        print("train: {} data".format(len(self.train_data)))
-        print("val  : {} data".format(len(self.val_data)))
+        try:
+            self.__load_sbd_data()
+            print("val  : {} data".format(len(self.val_data)))
+        except Exception as e:
+            import traceback
+            print("failed on making SBD dataset.")
+            print(e)
+            traceback.format_exc()
 
     def read_txt(self, txt_file="train.txt"):
         with open(os.path.join(txt_file), "r") as f:
@@ -59,6 +81,9 @@ class DatasetParser(object):
             return np.uint8(self.read_mat(mat_name, key='GTcls'))
 
     def __load_voc_data(self):
+        """
+            pixel value 255 in a mask image will be 1
+        """
         train_name_list = self.read_txt(os.path.join(self.voc_path, "ImageSets/Segmentation/train.txt"))
         for img_name in tqdm(train_name_list, desc="VOC training"):
             img = np.asarray(Image.open(os.path.join(self.voc_path, "JPEGImages/{}{}".format(img_name, self.img_extension)))).copy()
@@ -92,14 +117,13 @@ class DatasetParser(object):
 
     def __load_sbd_data(self):
         """
-            it will erase the 255 value pixel in this function.
-            well, I don't remember it containg a 255 value....
+            pixel value 255 in a mask image will be 1
         """
-
+        
         train_name_list = self.read_txt(os.path.join(self.sbd_path, "train.txt"))
         for img_name in tqdm(train_name_list, desc="SBD training"):
             # it seems same image in VOC and SBD, so I will skip it.
-            if img_name in self.voc_train_names:
+            if img_name in self.voc_train_names and self.skip_sbd_image_in_voc:
                 tqdm.write("skipped {}".format(img_name))
                 continue
 
@@ -112,8 +136,8 @@ class DatasetParser(object):
 
         val_name_list = self.read_txt(os.path.join(self.sbd_path, "val.txt"))
         for img_name in tqdm(val_name_list, desc="SBD validation"):
-            # it seems same image in VOC and SBD, so I will skip it.
-            if img_name in self.voc_val_names:
+            # it seems there is a same image in VOC and SBD, so I will skip it.
+            if img_name in self.voc_val_names and self.skip_sbd_image_in_voc:
                 tqdm.write("skipped {}".format(img_name))
                 continue
 

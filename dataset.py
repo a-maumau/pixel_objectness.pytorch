@@ -1,12 +1,13 @@
 import os
 import re
 
+import pickle
+import numpy as np
+from PIL import Image
+
 import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
-
-import numpy as np
-from PIL import Image
 
 def print_error(e):
     import traceback
@@ -79,12 +80,14 @@ class SegmentationDataSet(data.Dataset):
         self.mask_ext = mask_ext
         self.return_original = return_original
 
+        self.use_pickle = False
         self.data = []
 
         if pickle_path is not None:
             with open(pickle_path, "rb") as f:
                 self.data = pickle.load(f)
                 self.load_all_in_ram = True
+                self.use_pickle = True
 
         else:
             # all images must have pairs
@@ -127,6 +130,10 @@ class SegmentationDataSet(data.Dataset):
             img = Image.open(self.data[index]["image"]).convert('RGB')
             mask = Image.open(self.data[index]["mask"]).convert('P')
 
+        if self.use_pickle:
+            img = Image.fromarray(img)
+            mask = Image.fromarray(mask)
+
         if self.pair_transform is not None:
             _img, _mask_img = self.pair_transform(img, mask)
         else:
@@ -155,13 +162,11 @@ class SegmentationDataSet(data.Dataset):
         return self.data_num
 
 class PredictionLoader(data.Dataset):
-    def __init__(self, img_root, input_transform=None, return_original=False):
+    def __init__(self, img_root, input_transform=None):
         self.input_transform = input_transform
-
+        
         self.img_root = img_root
-
         self.image_names = os.listdir(os.path.join(img_root))
-
         self.data_num = len(self.image_names)
 
     def __getitem__(self, index):

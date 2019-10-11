@@ -305,7 +305,7 @@ class ResNet_PixelObjectness(nn.Module):
 
 
 def _resnet(block, layers, num_classes=2, imagenet_pretrained_path=None, **kwargs):
-    model = ResNet(block, layers, num_classes=num_classes, **kwargs)
+    model = ResNet_PixelObjectness(block, layers, num_classes=num_classes, **kwargs)
     
     if imagenet_pretrained_path is not None:
         model.load_imagenet_param(imagenet_pretrained_path)

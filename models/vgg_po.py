@@ -1,3 +1,4 @@
+import os
 import math
 
 import torch
@@ -75,18 +76,18 @@ def make_layers(cfg, batch_norm=False):
 
 cfg = {'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']}
 def vgg16(pretrained=False, **kwargs):
-    """VGG 16-layer model (configuration "D")
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
+    #""VGG 16-layer model (configuration "D")
+    #Args:
+    #    pretrained (bool): If True, returns a model pre-trained on ImageNet
+    #""
     if pretrained:
         kwargs['init_weights'] = False
     model = VGG(make_layers(cfg['D']), **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['vgg16']))
     return model
-"""
-"""
+
+
 which will make
 
 nn.Conv2d(3, 64, stride=1, kernel_size=3, padding=1),
@@ -131,7 +132,7 @@ nn.MaxPool2d(kernel_size=2, stride=2), #diff
 class VGG16_PixelObjectness(nn.Module):
     inplace_flag = False
     def __init__(self, input_channel=3, num_class=2, init_weights=True):
-        super(POVGG16, self).__init__()
+        super(VGG16_PixelObjectness, self).__init__()
 
         self.input_channel = input_channel
         self.num_class = num_class
@@ -200,7 +201,8 @@ class VGG16_PixelObjectness(nn.Module):
 
     def inference(self, inputs):
         # same thing
-        return torch.max(torch.nn.functional.softmax(self.features(inputs), dim=1), dim=1)[1].unsqueeze(1).type(torch.float)
+        prob_map = torch.nn.functional.softmax(self.features(inputs), dim=1)
+        return torch.max(torch.nn.functional.softmax(prob_map, dim=1), dim=1)[1].unsqueeze(1).type(torch.float), prob_map
 
     # for loading ImageNet pretrained model parameter from pytorch official.
     def load_imagenet_param(self, parameter_path, print_debug=False):
