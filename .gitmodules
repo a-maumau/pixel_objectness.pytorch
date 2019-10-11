@@ -1,0 +1,3 @@
+[submodule "mau_ml_util"]
+	path = mau_ml_util
+	url = https://github.com/a-maumau/mau_ml_util.git
